@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>R_DESIGN_SPACE // SYSTEM ONLINE</title>
+<meta name="theme-color" content="#000000">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: { fontFamily: { mono: ['"JetBrains Mono"','ui-monospace','SFMono-Regular','Menlo','Consolas','monospace'] } } } };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--neon:#00ff41;--neon-rgb:0,255,65}
+  *{box-sizing:border-box}
+  html,body{background:#000;margin:0}
+  body{
+    font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;color:#cfe9d6;
+    min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  }
+  #rain{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+  .depth{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 45%,rgba(0,0,0,.55) 0%,rgba(0,0,0,.2) 55%,transparent 100%),
+      radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.85) 100%);
+  }
+  .scan{
+    position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.35;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0,rgba(0,0,0,.35) 1px,transparent 1px,transparent 3px);
+  }
+  main{position:relative;z-index:2}
+
+  /* статус */
+  .status{
+    display:inline-flex;align-items:center;gap:.7rem;padding:.6rem 1rem;
+    border:1px solid rgba(var(--neon-rgb),.35);background:rgba(0,0,0,.6);
+    color:var(--neon);font-size:clamp(.66rem,2.6vw,.85rem);letter-spacing:.14em;
+    text-shadow:0 0 8px rgba(var(--neon-rgb),.8);
+    animation:flicker 4s infinite;
+    box-shadow:0 0 20px rgba(var(--neon-rgb),.15),inset 0 0 12px rgba(var(--neon-rgb),.08);
+  }
+  .status i{width:8px;height:8px;border-radius:50%;background:var(--neon);box-shadow:0 0 10px var(--neon);animation:blink 1.2s steps(1) infinite;flex:none}
+  @keyframes blink{50%{opacity:.15}}
+  @keyframes flicker{0%,18%,22%,62%,64%,100%{opacity:1}20%{opacity:.55}63%{opacity:.7}}
+
+  /* терминал с печатной машинкой */
+  .term{
+    position:relative;max-width:48rem;margin:0 auto;padding:1.3rem 1.3rem 1.5rem;
+    background:rgba(0,10,4,.6);border:1px solid rgba(var(--neon-rgb),.3);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:0 0 40px rgba(var(--neon-rgb),.12),inset 0 0 30px rgba(var(--neon-rgb),.05);
+  }
+  .term .bar{display:flex;gap:.4rem;align-items:center;margin-bottom:1rem;font-size:.68rem;letter-spacing:.18em;color:rgba(var(--neon-rgb),.55)}
+  .term .bar b{width:8px;height:8px;border-radius:50%;background:rgba(var(--neon-rgb),.5)}
+  .term .bar b:nth-child(2){opacity:.55}.term .bar b:nth-child(3){opacity:.3}
+  .term .bar span{margin-left:.5rem}
+  #typed{
+    min-height:11.5rem;margin:0;font-size:clamp(.88rem,3.4vw,1.02rem);line-height:1.8;color:#d6f5de;
+    white-space:pre-wrap;word-break:break-word;text-shadow:0 0 6px rgba(var(--neon-rgb),.25);
+  }
+  #typed::before{content:"neo@matrix:~$ ";color:var(--neon);text-shadow:0 0 8px var(--neon)}
+  .caret{display:inline-block;width:.6em;height:1.1em;background:var(--neon);box-shadow:0 0 10px var(--neon);vertical-align:-.2em;margin-left:2px;animation:blink 1s steps(1) infinite}
+
+  /* дышащие карточки */
+  .card{
+    position:relative;padding:1.4rem 1.4rem 1.5rem;
+    background:linear-gradient(145deg,rgba(0,20,8,.55),rgba(0,0,0,.55));
+    border:1px solid rgba(var(--neon-rgb),.2);
+    backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%);
+    animation:breathe 4.6s ease-in-out infinite;animation-delay:var(--b,0s);
+    transition:transform .4s cubic-bezier(.2,.8,.2,1),background .4s;
+  }
+  @keyframes breathe{
+    0%,100%{border-color:rgba(var(--neon-rgb),.16);box-shadow:0 0 6px rgba(var(--neon-rgb),.06),inset 0 0 14px rgba(var(--neon-rgb),.03)}
+    50%{border-color:rgba(var(--neon-rgb),.7);box-shadow:0 0 28px rgba(var(--neon-rgb),.32),inset 0 0 26px rgba(var(--neon-rgb),.1)}
+  }
+  .card::before,.card::after{content:"";position:absolute;width:12px;height:12px;border:1px solid var(--neon);opacity:.85;transition:.4s}
+  .card::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+  .card::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+  .card:hover{
+    animation:none;transform:translateY(-5px);border-color:rgba(var(--neon-rgb),.85);
+    background:linear-gradient(145deg,rgba(0,45,16,.65),rgba(0,0,0,.6));
+    box-shadow:0 0 38px rgba(var(--neon-rgb),.4),inset 0 0 32px rgba(var(--neon-rgb),.12);
+  }
+  .card:hover::before,.card:hover::after{width:22px;height:22px}
+  .card .idx{font-size:.68rem;letter-spacing:.2em;color:rgba(var(--neon-rgb),.6)}
+  .card h3{margin:.8rem 0 .5rem;font-size:1.02rem;font-weight:700;color:#fff;letter-spacing:.02em;text-shadow:0 0 10px rgba(var(--neon-rgb),.35)}
+  .card h3 .e{display:inline-block;margin-right:.45rem;transition:transform .4s}
+  .card:hover h3 .e{transform:scale(1.25) rotate(-8deg)}
+  .card p{margin:0;font-size:.85rem;line-height:1.7;color:#8fb09a;font-weight:300}
+  .card p::before{content:"> ";color:var(--neon)}
+
+  /* появление справа налево */
+  .slide{opacity:0;transform:translateX(90px);filter:blur(6px);
+    transition:opacity .9s ease-out,transform .9s cubic-bezier(.16,1,.3,1),filter .9s ease-out;
+    transition-delay:var(--d,0ms);will-change:transform,opacity}
+  .slide.in{opacity:1;transform:none;filter:none}
+  .card.slide.in{transition:transform .4s cubic-bezier(.2,.8,.2,1),background .4s,opacity .9s;transition-delay:0s}
+
+  /* кнопка звука */
+  #sound{
+    position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:50;
+    display:flex;align-items:center;gap:.5rem;height:42px;padding:0 .9rem;cursor:pointer;
+    font:500 .68rem/1 'JetBrains Mono',monospace;letter-spacing:.16em;color:rgba(var(--neon-rgb),.6);
+    background:rgba(0,0,0,.65);border:1px solid rgba(var(--neon-rgb),.3);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    transition:color .3s,border-color .3s,box-shadow .3s;-webkit-tap-highlight-color:transparent;
+  }
+  #sound:hover{border-color:rgba(var(--neon-rgb),.7)}
+  #sound.on{color:var(--neon);border-color:var(--neon);box-shadow:0 0 20px rgba(var(--neon-rgb),.4)}
+  #sound svg{width:18px;height:18px;flex:none}
+  #sound .wave{opacity:0;transition:opacity .3s}
+  #sound.on .wave{opacity:1}
+  #sound .mute{transition:opacity .3s}
+  #sound.on .mute{opacity:0}
+
+  .footer-copy{
+    color:var(--neon);letter-spacing:.2em;font-size:.85rem;
+    text-shadow:0 0 6px var(--neon),0 0 18px rgba(var(--neon-rgb),.7),0 0 36px rgba(var(--neon-rgb),.4);
+    animation:glow 3s ease-in-out infinite;
+  }
+  @keyframes glow{50%{text-shadow:0 0 3px var(--neon),0 0 10px rgba(var(--neon-rgb),.5),0 0 20px rgba(var(--neon-rgb),.25)}}
+
+  @media (prefers-reduced-motion:reduce){
+    .slide{opacity:1;transform:none;filter:none;transition:none}
+    .status,.footer-copy,.status i,.card,.caret{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="rain" aria-hidden="true"></canvas>
+<div class="depth" aria-hidden="true"></div>
+<div class="scan" aria-hidden="true"></div>
+
+<audio id="bgm" src="matrix.mp3" loop preload="auto"></audio>
+
+<button id="sound" type="button" aria-label="Activar música" aria-pressed="false">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" fill-opacity=".15"/>
+    <g class="wave"><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></g>
+    <g class="mute"><path d="m16 9 5 6M21 9l-5 6"/></g>
+  </svg>
+  <span id="soundLabel">SOUND OFF</span>
+</button>
+
+<main class="mx-auto w-full max-w-6xl px-4 sm:px-6 pt-16 sm:pt-12 pb-10 min-h-screen flex flex-col">
+
+  <header class="flex justify-center slide">
+    <div class="status"><i></i>[SYSTEM ONLINE // SECURE CHANNEL]</div>
+  </header>
+
+  <section class="mt-8 sm:mt-10 slide" style="--d:150ms">
+    <div class="term" id="term">
+      <div class="bar"><b></b><b></b><b></b><span>TERMINAL // R_DESIGN_SPACE</span></div>
+      <p id="typed" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="mt-10 sm:mt-14 grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <article class="card slide" style="--d:100ms;--b:0s">
+      <div class="idx">// 01</div>
+      <h3><span class="e">🎨</span>UX/UI e Identidad de marca</h3>
+      <p>Inmersión profunda, estilo único</p>
+    </article>
+    <article class="card slide" style="--d:200ms;--b:-.5s">
+      <div class="idx">// 02</div>
+      <h3><span class="e">💎</span>Diseño web a medida</h3>
+      <p>Interfaces exclusivas, píxel perfecto</p>
+    </article>
+    <article class="card slide" style="--d:300ms;--b:-1s">
+      <div class="idx">// 03</div>
+      <h3><span class="e">⚡️</span>Arquitectura y Landing pages</h3>
+      <p>Scroll cinematográfico, vibe coding</p>
+    </article>
+    <article class="card slide" style="--d:400ms;--b:-1.5s">
+      <div class="idx">// 04</div>
+      <h3><span class="e">🎬</span>Scroll cinematográfico</h3>
+      <p>Escenarios interactivos, trabajo en profundidad</p>
+    </article>
+    <article class="card slide" style="--d:500ms;--b:-2s">
+      <div class="idx">// 05</div>
+      <h3><span class="e">⚙️</span>Base técnica</h3>
+      <p>Soluciones interactivas complejas llave en mano</p>
+    </article>
+    <article class="card slide" style="--d:600ms;--b:-2.5s">
+      <div class="idx">// 06</div>
+      <h3><span class="e">🔄</span>Automatización y CRM</h3>
+      <p>Solicitudes al instante, embudos sin tareas repetitivas</p>
+    </article>
+    <article class="card slide" style="--d:700ms;--b:-3s">
+      <div class="idx">// 07</div>
+      <h3><span class="e">💳</span>Pagos e Integraciones</h3>
+      <p>Pasarela de pago segura, áreas privadas de cliente</p>
+    </article>
+    <article class="card slide" style="--d:800ms;--b:-3.5s">
+      <div class="idx">// 08</div>
+      <h3><span class="e">🤖</span>Bots y Sistemas</h3>
+      <p>Integración de bots de Telegram, webhooks, catálogos</p>
+    </article>
+    <article class="card slide" style="--d:900ms;--b:-4s">
+      <div class="idx">// 09</div>
+      <h3><span class="e">🚀</span>Desarrollo Full-Stack</h3>
+      <p>Ciclo completo, código y arquitectura llave en mano</p>
+    </article>
+  </section>
+
+  <footer class="mt-auto pt-14 text-center slide" style="--d:1000ms">
+    <span class="footer-copy">@r_design_space</span>
+  </footer>
+</main>
+
+<script>
+/* ===== MATRIX RAIN: 3 слоя глубины, атлас глифов, ~30 fps ===== */
+(() => {
+  const cv = document.getElementById('rain');
+  const ctx = cv.getContext('2d', { alpha: false });
+  const G = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:.=*+-<>¦|'.split('');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mobile = innerWidth < 640;
+
+  const LAYERS = [
+    { size: mobile ? 9  : 11, speed: [.18,.4], a: .5,  dens: 1.0 },
+    { size: mobile ? 13 : 16, speed: [.3,.7],  a: .8,  dens: .95 },
+    { size: mobile ? 19 : 24, speed: [.5,1.1], a: 1.0, dens: .65 }
+  ];
+  let W, H, dpr;
+
+  function buildAtlas() {
+    LAYERS.forEach(L => {
+      const px = Math.ceil(L.size * dpr * 1.4);
+      L.px = px;
+      L.atlas = G.map(ch => {
+        const mk = (color, blur) => {
+          const c = document.createElement('canvas'); c.width = c.height = px;
+          const x = c.getContext('2d');
+          x.font = `${L.size * dpr}px "JetBrains Mono",monospace`;
+          x.textAlign = 'center'; x.textBaseline = 'middle';
+          x.shadowColor = color; x.shadowBlur = blur * dpr;
+          x.fillStyle = color; x.fillText(ch, px / 2, px / 2);
+          return c;
+        };
+        return { g: mk('#00ff41', 3), d: mk('#00a82a', 0), w: mk('#eafff0', 5) };
+      });
+    });
+  }
+  function newDrop(L, initial) {
+    return {
+      y: initial ? Math.random() * (H / L.size) : -Math.random() * 30,
+      v: L.speed[0] + Math.random() * (L.speed[1] - L.speed[0]),
+      row: -1
+    };
+  }
+  function initLayer(L) {
+    L.cols = Math.ceil(W / L.size);
+    L.drops = [];
+    for (let i = 0; i < L.cols; i++) L.drops.push(Math.random() > L.dens ? null : newDrop(L, true));
+  }
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 1.5);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
+    buildAtlas();
+    LAYERS.forEach(initLayer);
+  }
+  function put(L, col, row, kind) {
+    const a = L.atlas[(Math.random() * G.length) | 0][kind];
+    const s = L.size * dpr;
+    ctx.drawImage(a, col * s + s / 2 - L.px / 2, row * s + s / 2 - L.px / 2);
+  }
+
+  let last = 0, raf = 0;
+  const STEP = 1000 / 30;
+  function frame(t) {
+    raf = requestAnimationFrame(frame);
+    if (t - last < STEP) return;
+    last = t;
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0,0,0,.085)';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    for (const L of LAYERS) {
+      ctx.globalAlpha = L.a;
+      const rows = H / L.size;
+      for (let i = 0; i < L.cols; i++) {
+        const d = L.drops[i];
+        if (!d) { if (Math.random() < .002) L.drops[i] = newDrop(L); continue; }
+        d.y += d.v;
+        const r = d.y | 0;
+        if (r !== d.row && r >= 0) {
+          if (d.row >= 0) put(L, i, d.row, 'g');
+          put(L, i, r, 'w');
+          d.row = r;
+        }
+        if (Math.random() < .03 && d.row > 3) {
+          put(L, i, Math.max(0, d.row - 1 - ((Math.random() * 14) | 0)), Math.random() < .3 ? 'w' : 'd');
+        }
+        if (d.row > rows && Math.random() > .96) L.drops[i] = newDrop(L);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  resize();
+  let rt;
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 200); });
+  document.fonts && document.fonts.ready.then(buildAtlas);
+
+  if (reduce) { for (let k = 0; k < 120; k++) { last = 0; frame(k * 40); cancelAnimationFrame(raf); } return; }
+  raf = requestAnimationFrame(frame);
+  document.addEventListener('visibilitychange', () => {
+    cancelAnimationFrame(raf);
+    if (!document.hidden) raf = requestAnimationFrame(frame);
+  });
+})();
+
+/* ===== Печатная машинка ===== */
+(() => {
+  const TEXT = 'Saludos. Estoy disponible y listo para trabajar. Me dedico a desarrollar soluciones digitales de otro nivel: desde el concepto hasta la automatización más avanzada. Cero plantillas: solo código limpio, estética impecable y un resultado que funciona como un reloj suizo. Todas las áreas y el stack, más abajo. Bienvenido al sistema.';
+  const el = document.getElementById('typed');
+  const caret = document.createElement('span'); caret.className = 'caret';
+  const node = document.createTextNode('');
+  el.append(node, caret);
+
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { node.data = TEXT; return; }
+
+  let i = 0, started = false;
+  function tick() {
+    if (i >= TEXT.length) return;
+    node.data = TEXT.slice(0, ++i);
+    const c = TEXT[i - 1];
+    setTimeout(tick, /[.:—]/.test(c) ? 220 : c === "," ? 100 : 34);
+  }
+  function start() { if (started) return; started = true; setTimeout(tick, 600); }
+  const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); start(); } }, { threshold: .3 });
+  io.observe(document.getElementById('term'));
+  // клик по терминалу — допечатать сразу
+  document.getElementById('term').addEventListener('click', () => { i = TEXT.length; node.data = TEXT; });
+})();
+
+/* ===== Музыка + кинотайминг (matrix.mp3, 60 с): 0–18 неподвижно, 18–55 автоскролл, 55–60 финал ===== */
+(() => {
+  const btn = document.getElementById('sound');
+  const label = document.getElementById('soundLabel');
+  const bgm = document.getElementById('bgm');
+  const root = document.documentElement;
+
+  const T_SCROLL_START = 18;   // с
+  const T_SCROLL_DUR = 37;     // с (18 → 55)
+
+  let raf = 0, done = false, manual = false;
+
+  function ui(on) {
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on);
+    btn.setAttribute('aria-label', on ? 'Desactivar música' : 'Activar música');
+    label.textContent = on ? 'SOUND ON' : 'SOUND OFF';
+  }
+
+  // Часы сцены — сама аудиодорожка: пауза звука замораживает и скролл
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    const t = bgm.currentTime;
+    if (t < T_SCROLL_START) return;
+    root.style.overflow = '';                       // фаза 1 закончилась — снимаем фиксацию
+    if (manual) return;                             // пользователь взял управление на себя
+    const p = Math.min(1, (t - T_SCROLL_START) / T_SCROLL_DUR);
+    const max = root.scrollHeight - innerHeight;
+    window.scrollTo(0, max * p);                    // строго линейно = равномерная скорость
+    if (p >= 1) finish();
+  }
+  function finish() {                               // финальная пауза внизу
+    done = true;
+    cancelAnimationFrame(raf); raf = 0;
+    window.scrollTo(0, root.scrollHeight);
+  }
+  function start() {
+    if (done || raf) return;
+    if (bgm.currentTime < T_SCROLL_START) {
+      window.scrollTo(0, 0);
+      root.style.overflow = 'hidden';               // экран неподвижен до 18-й секунды
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function stop() {
+    cancelAnimationFrame(raf); raf = 0;
+    root.style.overflow = '';
+  }
+
+  bgm.addEventListener('play', start);
+  bgm.addEventListener('pause', stop);
+  ['wheel', 'touchstart', 'keydown'].forEach(ev =>
+    addEventListener(ev, () => { if (raf && bgm.currentTime >= T_SCROLL_START) manual = true; }, { passive: true }));
+
+  btn.addEventListener('click', () => {
+    if (bgm.paused) {
+      bgm.play().then(() => ui(true)).catch(() => ui(false));
+    } else {
+      bgm.pause();
+      ui(false);
+    }
+  });
+})();
+
+/* ===== Появление справа налево ===== */
+(() => {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: .1 });
+  document.querySelectorAll('.slide').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>
